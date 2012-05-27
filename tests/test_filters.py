@@ -478,7 +478,7 @@ class TestCssRewrite(TempEnvironmentHelper):
         self.env.cache = True
         self.create_files({'in.css': '''h1 { background: url(old/sub/icon.png) }'''})
         # Does not raise an exception.
-        self.mkbundle('in.css', filters=cssrewrite, output='out.css').build()sour
+        self.mkbundle('in.css', filters=cssrewrite, output='out.css').build()
         assert self.get('out.css') == '''h1 { background: url(new/sub/icon.png) }'''
 
     def test_replacement_lambda(self):

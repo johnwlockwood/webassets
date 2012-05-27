@@ -37,7 +37,8 @@ class CSSRewrite(CSSUrlRewriter):
     This will rewrite all urls that point to files within ``old_directory`` to
     use ``/custom/path`` as a prefix instead.
 
-    You may plug in your own replace function:
+    You may plug in your own replace function::
+
         get_filter('cssrewrite', replace=lambda url: re.sub(r'^/?images/', '/images/', url))
         get_filter('cssrewrite', replace=lambda url: '/images/'+url[7:] if url.startswith('images/') else url)
     """
@@ -58,15 +59,12 @@ class CSSRewrite(CSSUrlRewriter):
         return self.replace
 
     def input(self, _in, out, **kw):
-        # For replace mode, make sure we have all the directories to be
-        # rewritten in form of a url, so we can later easily match it
-        # against the urls encountered in the CSS.
-        replace_dict = False
-        root = addsep(self.env.directory)
-        if self.replace and hasattr(self.replace , '__call__'):
-            #user provided their own replace_url
-            self.replace_url = self.replace
-        elif self.replace not in (False, None):
+        if self.replace not in (False, None) and not callable(self.replace):
+            # For replace mode, make sure we have all the directories to be
+            # rewritten in form of a url, so we can later easily match it
+            # against the urls encountered in the CSS.
+            replace_dict = False
+            root = addsep(self.env.directory)
             replace_dict = OrderedDict()
             for repldir, sub in self.replace.items():
                 repldir = addsep(os.path.normpath(join(root, repldir)))
@@ -78,7 +76,9 @@ class CSSRewrite(CSSUrlRewriter):
 
     def replace_url(self, url):
         # Replace mode: manually adjust the location of files
-        if self.replace is not False:
+        if callable(self.replace):
+            return self.replace(url)
+        elif self.replace is not False:
             for to_replace, sub in self.replace_dict.items():
                 targeturl = urlparse.urljoin(self.source_url, url)
                 if targeturl.startswith(to_replace):
